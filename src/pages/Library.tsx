@@ -49,11 +49,9 @@ export function Library() {
     try {
       const updated = await updatePreset(preset.id, { is_public: !preset.is_public });
       setMyPresets(prev => prev.map(p => p.id === preset.id ? { ...p, is_public: updated.is_public } : p));
-      if (updated.is_public) {
-        setPublicPresets(prev => [{ ...preset, is_public: true }, ...prev]);
-      } else {
-        setPublicPresets(prev => prev.filter(p => p.id !== preset.id));
-      }
+      // Re-fetch public presets to ensure community section is accurate
+      const freshPublic = await fetchPublicPresets();
+      setPublicPresets(freshPublic);
     } catch (err) {
       console.error('Failed to toggle visibility:', err);
     }
@@ -69,38 +67,36 @@ export function Library() {
             <h1 className="font-display text-4xl font-black tracking-tighter text-white">Grounds</h1>
             <p className="text-xs uppercase tracking-widest text-zinc-500 mt-1">Background Generator</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             {!loading && (
               user ? (
                 <>
                   <button
                     onClick={() => navigate('/editor')}
-                    className="flex items-center gap-2 px-4 py-2 bg-zinc-100 text-zinc-900 rounded-lg text-sm font-medium hover:bg-white transition-colors"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-white text-zinc-900 rounded-full text-sm font-semibold hover:bg-zinc-100 transition-colors shadow-sm"
                   >
                     <Plus className="w-4 h-4" />
                     New
                   </button>
-                  <div className="flex items-center gap-2">
-                    {user.user_metadata?.avatar_url && (
-                      <img
-                        src={user.user_metadata.avatar_url}
-                        alt=""
-                        className="w-8 h-8 rounded-full ring-2 ring-zinc-800"
-                      />
-                    )}
-                    <button
-                      onClick={signOut}
-                      className="text-zinc-500 hover:text-zinc-300 transition-colors p-1"
-                      title="Sign out"
-                    >
-                      <LogOut className="w-4 h-4" />
-                    </button>
-                  </div>
+                  {user.user_metadata?.avatar_url && (
+                    <img
+                      src={user.user_metadata.avatar_url}
+                      alt=""
+                      className="w-10 h-10 rounded-full ring-2 ring-zinc-700 shadow-md"
+                    />
+                  )}
+                  <button
+                    onClick={signOut}
+                    className="flex items-center gap-1.5 px-3 py-2 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-full transition-colors"
+                    title="Sign out"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
                 </>
               ) : (
                 <button
                   onClick={signIn}
-                  className="px-4 py-2 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-lg text-sm font-medium hover:bg-zinc-800 hover:text-white transition-colors"
+                  className="px-5 py-2.5 bg-zinc-900 border border-zinc-700 text-zinc-300 rounded-full text-sm font-medium hover:bg-zinc-800 hover:text-white transition-colors"
                 >
                   Sign In
                 </button>
@@ -180,7 +176,7 @@ export function Library() {
                         </button>
                         {menuOpenId === preset.id && (
                           <div
-                            className="absolute right-0 top-8 z-10 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl py-1 min-w-[160px]"
+                            className="absolute right-0 bottom-8 z-10 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl py-1 min-w-[160px]"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <button
@@ -243,22 +239,26 @@ function PresetCard({
   showAuthor?: boolean;
   actions?: React.ReactNode;
 }) {
+  const [thumbnailError, setThumbnailError] = useState(false);
+  const showThumbnail = preset.thumbnail_url && !thumbnailError;
+
   return (
     <div
       onClick={onClick}
-      className="group bg-zinc-900/50 border border-zinc-800 rounded-lg overflow-hidden cursor-pointer hover:border-zinc-700 transition-all hover:shadow-lg"
+      className="group bg-zinc-900/50 border border-zinc-800 rounded-lg cursor-pointer hover:border-zinc-700 transition-all hover:shadow-lg"
     >
       {/* Thumbnail */}
-      {preset.thumbnail_url ? (
-        <div className="aspect-[16/10] bg-zinc-900 overflow-hidden">
+      {showThumbnail ? (
+        <div className="aspect-[16/10] bg-zinc-900 overflow-hidden rounded-t-lg">
           <img
-            src={preset.thumbnail_url}
+            src={preset.thumbnail_url!}
             alt={preset.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            onError={() => setThumbnailError(true)}
           />
         </div>
       ) : (
-        <div className="aspect-[16/10] bg-zinc-900 flex items-center justify-center">
+        <div className="aspect-[16/10] bg-zinc-900 flex items-center justify-center rounded-t-lg">
           <div className="flex w-3/4 h-2 rounded-full overflow-hidden">
             {preset.state.palette.map((color: string, i: number) => (
               <div key={i} style={{ backgroundColor: color }} className="flex-1 h-full" />

@@ -30,13 +30,19 @@ An interactive background generator built with WebGL shaders. Create, customize,
    npm install
    ```
 
-2. Copy `.env.example` to `.env.local` and fill in your Supabase credentials:
+2. Copy `.env.example` to `.env` and fill in your Supabase credentials:
    ```
    VITE_SUPABASE_URL=your-project-url
    VITE_SUPABASE_ANON_KEY=your-anon-key
    ```
 
-3. Run the dev server:
+3. Set up Supabase:
+   - Create `presets` and `profiles` tables
+   - Add a foreign key from `presets.user_id` to `profiles.id`
+   - Create a `thumbnails` storage bucket (public) with RLS policies allowing authenticated uploads and public reads
+   - Add `http://localhost:3000` to **Authentication → URL Configuration → Redirect URLs**
+
+4. Run the dev server:
    ```bash
    npm run dev
    ```
