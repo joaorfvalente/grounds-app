@@ -2,7 +2,7 @@
 
 An interactive background generator built with WebGL shaders. Create, customize, save, and share animated backgrounds.
 
-**Live App:** https://unique-druid-0936ac.netlify.app
+**Live App:** https://groundsapp.netlify.app
 
 ## Features
 
@@ -40,7 +40,7 @@ An interactive background generator built with WebGL shaders. Create, customize,
    - Create `presets` and `profiles` tables
    - Add a foreign key from `presets.user_id` to `profiles.id`
    - Create a `thumbnails` storage bucket (public) with RLS policies allowing authenticated uploads and public reads
-   - Add `http://localhost:3000` to **Authentication → URL Configuration → Redirect URLs**
+   - In **Authentication → URL Configuration**, set **Site URL** to `https://groundsapp.netlify.app` and add **Redirect URLs** for `http://localhost:3000` and `https://groundsapp.netlify.app`
 
 4. Run the dev server:
    ```bash
@@ -48,6 +48,10 @@ An interactive background generator built with WebGL shaders. Create, customize,
    ```
 
 The app will be available at `http://localhost:3000`.
+
+## Netlify (production)
+
+Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the site’s environment (same values as local `.env`). The live app is served at **https://groundsapp.netlify.app**; OAuth uses `window.location.origin`, so no code change is needed when the Netlify hostname changes, as long as Supabase redirect URLs include that host.
 
 ## Scripts
 
